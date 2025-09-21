@@ -1,43 +1,40 @@
-const db = require("../utils/db-connection");
-const addBusData = (req, res) => {
-  const { busNumber, totalSeats, availableSeats } = req.body;
-  const addBusQuery =
-    "Insert into Buses(busNumber,totalSeats,availableSeats) values (?,?,?);";
+const { Op } = require("sequelize");
+const Buses = require("../models/busModel");
+const addBusData = async (req, res) => {
+  try {
+    const { busNumber, totalSeats, availableSeats } = req.body;
+    const BusData = await Buses.create({
+      busNumber: busNumber,
+      totalSeats: totalSeats,
+      availableSeats: availableSeats,
+    });
 
-  db.execute(
-    addBusQuery,
-    [busNumber, totalSeats, availableSeats],
-    (err, results) => {
-      if (err) {
-        console.log(err);
-        res.status(500).send(err.message);
-        return;
-      }
-
-      console.log("Successfully added the Bus");
-      res
-        .status(201)
-        .send(`Successfully added Bus with Bus number  ${busNumber}`);
-    }
-  );
+    res.status(201).send("Bus data added");
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("Unable to add Bus");
+  }
 };
 
-const getBusDataWithAvailSeats = (req, res) => {
-  const { seats } = req.params;
-  const availSeatBusQuery = "Select * from Buses where availableSeats > ?";
+const getBusDataWithAvailSeats = async (req, res) => {
+  try {
+    const { seats } = req.params;
+    const BusSeatsAvailable = await Buses.findAll({
+      where: {
+        availableSeats: {
+          [Op.gt]: seats,
+        },
+      },
+    });
 
-  db.execute(availSeatBusQuery, [seats], (err, results) => {
-    if (err) {
-      console.log(err);
-      res.status(500).send(err.message);
-      return;
+    if (!BusSeatsAvailable) {
+      res.status(404).send("no seats Available");
     }
-    if (results.affectedRows === 0) {
-      res.status(404).send(`No such buses Avaialble with ${seats} seats`);
-    }
-
-    res.status(200).json(results);
-  });
+    res.status(200).json(BusSeatsAvailable);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("unable to fetch the bus data ");
+  }
 };
 
 module.exports = {

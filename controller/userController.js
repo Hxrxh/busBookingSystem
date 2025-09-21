@@ -1,32 +1,27 @@
 const db = require("../utils/db-connection");
+const Users = require("../models/userModel");
+const addUserData = async (req, res) => {
+  try {
+    const { name, email } = req.body;
+    const UserData = await Users.create({
+      name: name,
+      email: email,
+    });
 
-const addUserData = (req, res) => {
-  console.log("addUserdata called");
-  const { name, email } = req.body;
-  const postQuery = `INSERT INTO Users(name,email) Values(?,?)`;
-
-  db.execute(postQuery, [name, email], (err) => {
-    if (err) {
-      console.log(err);
-      res.status(500).send(err.message);
-      return;
-    }
-    console.log(`Successfully posted the data.`);
-    res.status(201).send(`${name} successfully posted.`);
-  });
+    res.status(201).send("User data added");
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("Unable to add User");
+  }
 };
 
-const getUserData = (req, res) => {
-  const getQuery = `Select * from Users`;
-  db.execute(getQuery, (err, results) => {
-    if (err) {
-      console.log(err);
-      res.status(500).send(err.message);
-      return;
-    }
-    console.log(`Successfully Retrieved Users data.`);
-    res.status(201).json(results);
-  });
+const getUserData = async (req, res) => {
+  try {
+    const users = await Users.findAll();
+    res.status(200).json(users);
+  } catch (err) {
+    res.status(500).send("No user ");
+  }
 };
 
 module.exports = {
